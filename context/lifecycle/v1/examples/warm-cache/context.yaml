@@ -1,0 +1,66 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+
+metadata:
+  name: search-warm-cache-context
+  description: Context with controlled warmup for evaluating search candidates under realistic cache conditions.
+
+mode: warm-cache
+
+environment:
+  name: search-simulation-env
+  version: v2
+  runtime: kubernetes
+  region: eu-test-1
+
+datasets:
+  - name: search-warmup-queries
+    ref: dataset://search/warmup-queries/2026-05
+    digest: sha256:d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5
+    mountPath: /brotni/data/warmup-queries.ndjson
+    required: true
+
+  - name: search-eval-queries
+    ref: dataset://search/eval-queries/2026-05
+    digest: sha256:e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6
+    mountPath: /brotni/data/eval-queries.ndjson
+    required: true
+
+warmup:
+  enabled: true
+  durationSeconds: 600
+  strategy: traffic-replay
+
+isolation:
+  network: sandboxed
+  filesystem: copy-on-write
+  externalDependencies: mocked
+
+reset:
+  afterEachRun: true
+  strategy: restore-snapshot
+
+recycle:
+  enabled: true
+  maxRunsPerSnapshot: 10
+  invalidateOn:
+    - dataset-change
+    - environment-version-change
+
+discard:
+  afterCampaign: true
+  retainForAudit: false
+
+limits:
+  maxRunDurationSeconds: 1200
+  maxContextAgeSeconds: 43200
+
+reproducibility:
+  seed: 7
+  recordEnvironment: true
+  recordDatasetDigests: true
+  recordContextDigest: true
+
+security:
+  allowOutboundNetwork: false
+  secretPolicy: external-reference-only

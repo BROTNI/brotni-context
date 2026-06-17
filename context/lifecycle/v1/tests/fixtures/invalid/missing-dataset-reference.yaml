@@ -1,0 +1,9 @@
+# INVALID: dataset ref must start with dataset:// (missing required URI prefix)
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: invalid-dataset-ref-context
+mode: clean
+datasets:
+  - name: bad-dataset
+    ref: s3://my-bucket/data.ndjson

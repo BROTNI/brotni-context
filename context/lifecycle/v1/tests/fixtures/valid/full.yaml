@@ -1,0 +1,56 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: test-full-context
+  description: Full valid fixture for testing all fields
+mode: snapshot-clone
+environment:
+  name: test-env
+  version: v1
+  runtime: docker
+datasets:
+  - name: test-data
+    ref: dataset://test/data/v1
+    digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    mountPath: /data/test.ndjson
+    required: true
+warmup:
+  enabled: true
+  durationSeconds: 60
+  strategy: fixed-duration
+snapshot:
+  enabled: true
+  name: test-snapshot
+  afterStages:
+    - prepare
+    - hydrate
+clone:
+  strategy: copy-on-write
+  perCandidate: true
+isolation:
+  network: sandboxed
+  filesystem: copy-on-write
+  database: restore-from-snapshot
+  externalDependencies: mocked
+reset:
+  afterEachRun: true
+  strategy: restore-snapshot
+recycle:
+  enabled: true
+  maxRunsPerSnapshot: 10
+  invalidateOn:
+    - dataset-change
+    - environment-version-change
+discard:
+  afterCampaign: true
+  retainForAudit: false
+limits:
+  maxRunDurationSeconds: 300
+reproducibility:
+  seed: 1
+  recordEnvironment: true
+  recordDatasetDigests: true
+  recordContextDigest: true
+security:
+  allowOutboundNetwork: false
+  secretPolicy: external-reference-only

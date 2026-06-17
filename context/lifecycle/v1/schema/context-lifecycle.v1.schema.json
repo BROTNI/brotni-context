@@ -1,0 +1,298 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://context.brotni.com/schemas/context-lifecycle.v1.schema.json",
+  "title": "SimulationContext",
+  "description": "Brotni simulation context lifecycle specification v1",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "mode"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "const": "context.brotni.com/v1",
+      "description": "Must be context.brotni.com/v1"
+    },
+    "kind": {
+      "type": "string",
+      "const": "SimulationContext",
+      "description": "Must be SimulationContext"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique name for this simulation context"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["clean", "snapshot-clone", "warm-cache", "stateful-replay"],
+      "description": "Context lifecycle mode"
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "runtime": { "type": "string" },
+        "region": { "type": "string" },
+        "image": { "type": "string" }
+      }
+    },
+    "datasets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "ref"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "ref": {
+            "type": "string",
+            "pattern": "^dataset://"
+          },
+          "digest": { "type": "string" },
+          "mountPath": { "type": "string" },
+          "required": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ref": { "type": "string" },
+            "digest": { "type": "string" }
+          }
+        },
+        "featureFlags": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ref": { "type": "string" },
+            "digest": { "type": "string" }
+          }
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "databases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "source": { "type": "string" },
+              "resetPolicy": {
+                "type": "string",
+                "enum": ["restore", "drop-and-recreate", "truncate", "none"]
+              }
+            }
+          }
+        },
+        "queues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "hydrationPolicy": { "type": "string" }
+            }
+          }
+        },
+        "caches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "strategy": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "warmup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "durationSeconds": { "type": "integer", "minimum": 0 },
+        "strategy": {
+          "type": "string",
+          "enum": ["fixed-duration", "traffic-replay", "request-warmup", "custom"]
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "name": { "type": "string" },
+        "afterStages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["prepare", "hydrate", "warmup"]
+          }
+        }
+      }
+    },
+    "clone": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["copy-on-write", "full-copy", "overlay"]
+        },
+        "perCandidate": { "type": "boolean" }
+      }
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "network": {
+          "type": "string",
+          "enum": ["sandboxed", "host", "none"]
+        },
+        "filesystem": {
+          "type": "string",
+          "enum": ["copy-on-write", "read-only", "ephemeral", "shared"]
+        },
+        "database": {
+          "type": "string",
+          "enum": ["restore-from-snapshot", "per-candidate-instance", "shared"]
+        },
+        "externalDependencies": {
+          "type": "string",
+          "enum": ["mocked", "real", "blocked"]
+        }
+      }
+    },
+    "reset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "afterEachRun": { "type": "boolean" },
+        "strategy": {
+          "type": "string",
+          "enum": ["restore-snapshot", "drop-and-reprepare", "truncate-state", "none"]
+        }
+      }
+    },
+    "recycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "maxRunsPerSnapshot": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "invalidateOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "schema-change",
+              "dataset-change",
+              "environment-version-change",
+              "security-policy-change",
+              "manual",
+              "time-based"
+            ]
+          }
+        }
+      }
+    },
+    "discard": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "afterCampaign": { "type": "boolean" },
+        "retainForAudit": { "type": "boolean" },
+        "retainDurationSeconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxRunDurationSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxContextAgeSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxCandidates": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "seed": { "type": "integer" },
+        "recordEnvironment": { "type": "boolean" },
+        "recordDatasetDigests": { "type": "boolean" },
+        "recordContextDigest": { "type": "boolean" }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowOutboundNetwork": { "type": "boolean" },
+        "secretPolicy": {
+          "type": "string",
+          "enum": ["external-reference-only", "none", "vault-injected"]
+        },
+        "dataClassification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"]
+        }
+      }
+    }
+  }
+}
