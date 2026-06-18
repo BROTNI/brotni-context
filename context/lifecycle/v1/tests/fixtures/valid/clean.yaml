@@ -1,0 +1,5 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: test-clean-context
+mode: clean

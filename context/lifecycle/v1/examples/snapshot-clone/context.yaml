@@ -1,0 +1,90 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+
+metadata:
+  name: routing-prod-replay-context
+  description: Reproducible context for evaluating routing candidates against historical traffic replay.
+
+mode: snapshot-clone
+
+environment:
+  name: routing-simulation-env
+  version: v3
+  runtime: kubernetes
+  region: eu-test-1
+
+datasets:
+  - name: historical-traffic
+    ref: dataset://routing/prod-replay/2026-05
+    digest: sha256:b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3
+    mountPath: /brotni/data/events.ndjson
+    required: true
+
+inputs:
+  configuration:
+    ref: config://routing/baseline/v7
+    digest: sha256:c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4
+
+state:
+  databases:
+    - name: routing-db
+      source: snapshot://routing-db/baseline-v3
+      resetPolicy: restore
+
+  queues:
+    - name: routing-events
+      hydrationPolicy: replay-from-dataset
+
+warmup:
+  enabled: true
+  durationSeconds: 300
+  strategy: fixed-duration
+
+snapshot:
+  enabled: true
+  name: routing-context-baseline-v3
+  afterStages:
+    - prepare
+    - hydrate
+    - warmup
+
+clone:
+  strategy: copy-on-write
+  perCandidate: true
+
+isolation:
+  network: sandboxed
+  filesystem: copy-on-write
+  database: restore-from-snapshot
+  externalDependencies: mocked
+
+reset:
+  afterEachRun: true
+  strategy: restore-snapshot
+
+recycle:
+  enabled: true
+  maxRunsPerSnapshot: 20
+  invalidateOn:
+    - schema-change
+    - dataset-change
+    - environment-version-change
+    - security-policy-change
+
+discard:
+  afterCampaign: true
+  retainForAudit: false
+
+limits:
+  maxRunDurationSeconds: 900
+  maxContextAgeSeconds: 86400
+
+reproducibility:
+  seed: 42
+  recordEnvironment: true
+  recordDatasetDigests: true
+  recordContextDigest: true
+
+security:
+  allowOutboundNetwork: false
+  secretPolicy: external-reference-only

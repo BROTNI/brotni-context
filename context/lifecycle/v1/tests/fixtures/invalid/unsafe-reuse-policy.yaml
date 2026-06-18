@@ -1,0 +1,9 @@
+# INVALID: recycle.maxRunsPerSnapshot must be >= 1 (value 0 is invalid)
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: invalid-unsafe-reuse-context
+mode: snapshot-clone
+recycle:
+  enabled: true
+  maxRunsPerSnapshot: 0

@@ -1,0 +1,17 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: test-snapshot-clone-context
+mode: snapshot-clone
+snapshot:
+  enabled: true
+  name: test-baseline
+  afterStages:
+    - prepare
+    - hydrate
+clone:
+  strategy: copy-on-write
+  perCandidate: true
+reset:
+  afterEachRun: true
+  strategy: restore-snapshot

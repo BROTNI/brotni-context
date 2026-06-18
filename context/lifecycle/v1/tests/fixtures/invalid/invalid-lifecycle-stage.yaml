@@ -1,0 +1,11 @@
+# INVALID: 'afterStages' contains an unrecognized stage 'validate'
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: invalid-lifecycle-stage-context
+mode: snapshot-clone
+snapshot:
+  enabled: true
+  name: bad-snapshot
+  afterStages:
+    - validate
