@@ -1,0 +1,48 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+
+metadata:
+  name: clean-routing-context
+  description: Clean context for routing candidate evaluation. Each candidate starts from a freshly prepared environment.
+
+mode: clean
+
+environment:
+  name: routing-simulation-env
+  version: v3
+  runtime: kubernetes
+  region: eu-test-1
+
+datasets:
+  - name: routing-test-data
+    ref: dataset://routing/test-cases/v2
+    digest: sha256:a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
+    mountPath: /brotni/data/test-cases.ndjson
+    required: true
+
+isolation:
+  network: sandboxed
+  filesystem: ephemeral
+  database: per-candidate-instance
+  externalDependencies: mocked
+
+reset:
+  afterEachRun: true
+  strategy: drop-and-reprepare
+
+discard:
+  afterCampaign: true
+  retainForAudit: false
+
+limits:
+  maxRunDurationSeconds: 600
+
+reproducibility:
+  seed: 42
+  recordEnvironment: true
+  recordDatasetDigests: true
+  recordContextDigest: true
+
+security:
+  allowOutboundNetwork: false
+  secretPolicy: external-reference-only

@@ -1,0 +1,9 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: test-warm-cache-context
+mode: warm-cache
+warmup:
+  enabled: true
+  durationSeconds: 120
+  strategy: fixed-duration

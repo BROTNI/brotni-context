@@ -1,0 +1,5 @@
+# INVALID: missing required 'mode' field
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: invalid-missing-mode-context

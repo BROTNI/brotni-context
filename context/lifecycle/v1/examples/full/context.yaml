@@ -1,0 +1,114 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+
+metadata:
+  name: full-featured-context-example
+  description: >
+    A comprehensive example demonstrating all available SimulationContext fields.
+    This is a reference example, not intended for direct use in production.
+  labels:
+    team: platform
+    purpose: reference
+  annotations:
+    brotni.com/reviewed-by: spec-team
+
+mode: snapshot-clone
+
+environment:
+  name: full-simulation-env
+  version: v5
+  runtime: kubernetes
+  region: eu-test-1
+  image: brotni-sim-base:v5
+
+datasets:
+  - name: primary-dataset
+    ref: dataset://example/primary/2026-05
+    digest: sha256:1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b
+    mountPath: /brotni/data/primary.ndjson
+    required: true
+  - name: secondary-dataset
+    ref: dataset://example/secondary/2026-05
+    digest: sha256:2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c
+    mountPath: /brotni/data/secondary.ndjson
+    required: false
+
+inputs:
+  configuration:
+    ref: config://example/baseline/v1
+    digest: sha256:3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d
+  featureFlags:
+    ref: flags://example/baseline/v1
+    digest: sha256:4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e
+
+state:
+  databases:
+    - name: primary-db
+      source: snapshot://primary-db/baseline-v1
+      resetPolicy: restore
+    - name: secondary-db
+      source: snapshot://secondary-db/baseline-v1
+      resetPolicy: truncate
+  queues:
+    - name: event-queue
+      hydrationPolicy: replay-from-dataset
+  caches:
+    - name: primary-cache
+      strategy: warm-from-dataset
+
+warmup:
+  enabled: true
+  durationSeconds: 300
+  strategy: traffic-replay
+
+snapshot:
+  enabled: true
+  name: full-example-baseline-v1
+  afterStages:
+    - prepare
+    - hydrate
+    - warmup
+
+clone:
+  strategy: copy-on-write
+  perCandidate: true
+
+isolation:
+  network: sandboxed
+  filesystem: copy-on-write
+  database: restore-from-snapshot
+  externalDependencies: mocked
+
+reset:
+  afterEachRun: true
+  strategy: restore-snapshot
+
+recycle:
+  enabled: true
+  maxRunsPerSnapshot: 50
+  invalidateOn:
+    - schema-change
+    - dataset-change
+    - environment-version-change
+    - security-policy-change
+
+discard:
+  afterCampaign: true
+  retainForAudit: true
+  retainDurationSeconds: 2592000
+
+limits:
+  maxRunDurationSeconds: 1800
+  maxContextAgeSeconds: 604800
+  maxCandidates: 100
+
+reproducibility:
+  seed: 42
+  recordEnvironment: true
+  recordDatasetDigests: true
+  recordContextDigest: true
+
+security:
+  allowOutboundNetwork: false
+  secretPolicy: external-reference-only
+  dataClassification: internal

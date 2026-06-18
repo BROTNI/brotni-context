@@ -1,0 +1,9 @@
+apiVersion: context.brotni.com/v1
+kind: SimulationContext
+metadata:
+  name: test-stateful-replay-context
+mode: stateful-replay
+state:
+  queues:
+    - name: replay-queue
+      hydrationPolicy: replay-from-dataset
