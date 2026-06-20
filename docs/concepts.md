@@ -20,6 +20,24 @@ A **candidate** is an implementation being evaluated in a simulation campaign. M
 
 A **simulation campaign** is a structured evaluation effort in which one or more candidates are run against a defined context under the rules of a simulation spec. A campaign may evaluate many candidates and produce comparative results.
 
+A campaign is declared portably in a `.brotni/simulation.yaml` manifest (goals, constraints, and candidate discovery) and is owned canonically by the simulation studio, which materializes the artifacts below.
+
+## Change Candidate
+
+A **change candidate** is any variant that can change system behaviour: a code change (pull request / merge request / commit), a container image, or a configuration bundle. A candidate's identity is its immutable artifact — a commit SHA, an image digest, or a configuration hash — never a mutable branch name or tag.
+
+## Scoring Profile
+
+A **scoring profile** is a versioned, immutable set of weighted goals and pass/fail constraints used to interpret candidate results. Re-weighting goals creates a new profile version; existing scorecards are never overwritten, so historical decisions remain reproducible.
+
+## Scorecard
+
+A **scorecard** is the scored result for one candidate under one scoring profile version. Goal metrics are normalised across all candidates so the comparison is relative and fair; blocking constraint violations are recorded without discarding the score.
+
+## Decision Report
+
+A **decision report** is the comparative outcome of a campaign under a scoring profile version: a ranking of candidates, a winner (the top-ranked candidate that passes all blocking constraints, if any), and a human-readable rationale and audit trail.
+
 ## Simulation Spec
 
 A **simulation spec** defines what should be evaluated: the evaluation goals, KPIs, constraints, scoring intent, and the dataset or traffic sources to use. It does not describe how candidates run or how the environment is prepared.
